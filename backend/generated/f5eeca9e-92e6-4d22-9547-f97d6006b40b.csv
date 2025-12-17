@@ -1,0 +1,11 @@
+"user_id","username","email","phone_number"
+0,user0,user0@example.com,Engineering
+1,user1,user1@example.com,Marketing
+2,user2,user2@example.com,Sales
+3,user3,user3@example.com,Support
+4,user4,user4@example.com,HR
+5,user5,user5@example.com,Finance
+6,user6,user6@example.com,Engineering
+7,user7,user7@example.com,Marketing
+8,user8,user8@example.com,Sales
+9,user9,user9@example.com,Support

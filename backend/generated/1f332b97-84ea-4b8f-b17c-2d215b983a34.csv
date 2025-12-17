@@ -1,0 +1,11 @@
+"user_id","username","email","phone_number","department"
+0,user0,user0@example.com,+918371000,Engineering
+1,user1,user1@example.com,+918371001,Marketing
+2,user2,user2@example.com,+918371002,Sales
+3,user3,user3@example.com,+918371003,Support
+4,user4,user4@example.com,+918371004,HR
+5,user5,user5@example.com,+918371005,Finance
+6,user6,user6@example.com,+918371006,Engineering
+7,user7,user7@example.com,+918371007,Marketing
+8,user8,user8@example.com,+918371008,Sales
+9,user9,user9@example.com,+918371009,Support

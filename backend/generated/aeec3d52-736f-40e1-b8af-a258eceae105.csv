@@ -1,0 +1,11 @@
+"user_id","username","email","phone_number","first_name","last_name"
+0,user0,user0@example.com,+918371000,fname0,lname0
+1,user1,user1@example.com,+918371001,fname1,lname1
+2,user2,user2@example.com,+918371002,fname2,lname2
+3,user3,user3@example.com,+918371003,fname3,lname3
+4,user4,user4@example.com,+918371004,fname4,lname4
+5,user5,user5@example.com,+918371005,fname5,lname5
+6,user6,user6@example.com,+918371006,fname6,lname6
+7,user7,user7@example.com,+918371007,fname7,lname7
+8,user8,user8@example.com,+918371008,fname8,lname8
+9,user9,user9@example.com,+918371009,fname9,lname9

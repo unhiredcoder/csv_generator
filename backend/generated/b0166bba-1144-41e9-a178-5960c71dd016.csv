@@ -1,0 +1,11 @@
+"user_id","username","email","phone_number","created_date"
+USER-JOB-0,user0,user0@example.com,+918371000,2025-12-17
+USER-JOB-1,user1,user1@example.com,+918371001,2025-12-16
+USER-JOB-2,user2,user2@example.com,+918371002,2025-12-15
+USER-JOB-3,user3,user3@example.com,+918371003,2025-12-14
+USER-JOB-4,user4,user4@example.com,+918371004,2025-12-13
+USER-JOB-5,user5,user5@example.com,+918371005,2025-12-12
+USER-JOB-6,user6,user6@example.com,+918371006,2025-12-11
+USER-JOB-7,user7,user7@example.com,+918371007,2025-12-10
+USER-JOB-8,user8,user8@example.com,+918371008,2025-12-09
+USER-JOB-9,user9,user9@example.com,+918371009,2025-12-08
