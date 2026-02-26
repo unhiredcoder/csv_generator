@@ -6,7 +6,7 @@ import GenerationPanel from './components/GenerationPanel';
 import HistoryPanel from './components/HistoryPanel';
 import './App.css';
 
-axios.defaults.baseURL = 'http://10.10.15.140:5000';
+axios.defaults.baseURL = 'https://csv-generator-dn6v.onrender.com';
 
 function App() {
   const [fields, setFields] = useState([]);
@@ -77,7 +77,7 @@ function App() {
 
   const setupWebSocket = () => {
     console.log('Setting up WebSocket connection...');
-    const ws = new WebSocket('ws://10.10.15.140:8080');
+    const ws = new WebSocket('ws://csv-generator-dn6v.onrender.com');
     
     ws.onopen = () => {
       console.log('✅ WebSocket connected');
@@ -301,5 +301,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;
