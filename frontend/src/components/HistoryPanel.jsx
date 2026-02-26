@@ -4,6 +4,12 @@ import axios from 'axios';
 import { FaDownload, FaClock, FaDatabase, FaFileCsv } from 'react-icons/fa';
 
 function HistoryPanel() {
+const API_BASE = "https://csv-generator-dn6v.onrender.com";
+const WS_URL = "wss://csv-generator-dn6v.onrender.com";
+
+axios.defaults.baseURL = API_BASE;
+
+  
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,7 +53,7 @@ function HistoryPanel() {
   };
 
   const downloadFile = (jobId) => {
-    window.open(`/api/download/${jobId}`, '_blank');
+    window.open(`${API_BASE}/api/download/${jobId}`, "_blank");
   };
 
   if (loading) {
@@ -160,5 +166,6 @@ function HistoryPanel() {
     </div>
   );
 }
+
 
 export default HistoryPanel;
