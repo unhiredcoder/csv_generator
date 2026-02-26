@@ -168,6 +168,8 @@ app.post('/api/generate-csv', async (req, res) => {
    PROCESS CSV
 ================================ */
 async function processCSVGeneration(jobId, fields, rowCount, record) {
+  const startTime = Date.now();
+
   try {
     broadcastProgress(jobId, {
       status: 'starting',
@@ -176,19 +178,55 @@ async function processCSVGeneration(jobId, fields, rowCount, record) {
     });
 
     const tasks = workerPool.distributeCSVGeneration(fields, rowCount, jobId);
+    const totalChunks = tasks.length;
+
     const results = await workerPool.executeParallel(tasks);
 
     const failed = results.filter(r => r.status === 'rejected');
     if (failed.length > 0) throw new Error('Worker task failed');
 
+    broadcastProgress(jobId, {
+      status: 'merging',
+      progress: 80,
+      message: 'Merging chunks...'
+    });
+
+    const finalFilePath = path.join(__dirname, 'generated', `${jobId}.csv`);
+    const writeStream = fs.createWriteStream(finalFilePath);
+
+    // Write header
+    const header = fields.map(f => `"${f.name}"`).join(',') + '\n';
+    writeStream.write(header);
+
+    for (let i = 0; i < totalChunks; i++) {
+      const partPath = path.join(__dirname, 'temp', `${jobId}_part_${i}.csv`);
+
+      if (fs.existsSync(partPath)) {
+        const content = fs.readFileSync(partPath, 'utf8');
+        const lines = content.split('\n').slice(1).filter(Boolean);
+        writeStream.write(lines.join('\n') + '\n');
+
+        fs.unlinkSync(partPath);
+      }
+    }
+
+    writeStream.end();
+    await new Promise(resolve => writeStream.on('finish', resolve));
+
+    const processingTime = Date.now() - startTime;
+
     record.status = 'completed';
     record.completedAt = new Date();
+    record.processingTime = processingTime;
+    record.downloadPath = `/api/download/${jobId}`;
+
     await record.save();
 
     broadcastProgress(jobId, {
       status: 'completed',
       progress: 100,
-      message: 'CSV generation completed!'
+      message: 'CSV generation completed!',
+      downloadUrl: `/api/download/${jobId}`
     });
 
   } catch (error) {
@@ -259,3 +297,4 @@ server.listen(PORT, '0.0.0.0', () => {
   🧵 Worker Pool Size: ${workerPool.poolSize}
   `);
 });
+
