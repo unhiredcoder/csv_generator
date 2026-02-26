@@ -77,7 +77,7 @@ function App() {
 
   const setupWebSocket = () => {
     console.log('Setting up WebSocket connection...');
-    const ws = new WebSocket('ws://csv-generator-dn6v.onrender.com');
+    const ws = new WebSocket('wss://csv-generator-dn6v.onrender.com');
     
     ws.onopen = () => {
       console.log('✅ WebSocket connected');
@@ -304,3 +304,4 @@ function App() {
 
 
 export default App;
+
