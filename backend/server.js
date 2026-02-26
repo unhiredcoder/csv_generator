@@ -1,4 +1,4 @@
-// backend/server.js - FIXED FOR RENDER WEBSOCKET
+// backend/server.js - FULL VERSION (Render + WebSocket Fixed)
 
 const express = require('express');
 const cors = require('cors');
@@ -28,7 +28,7 @@ const wss = new WebSocket.Server({ server });
 const clients = new Map();
 
 /* ================================
-   CREATE REQUIRED DIRECTORIES
+   CREATE DIRECTORIES
 ================================ */
 ['temp', 'generated'].forEach(folder => {
   const dir = path.join(__dirname, folder);
@@ -49,14 +49,14 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/downloads', express.static(path.join(__dirname, 'generated')));
 
 /* ================================
-   MONGODB CONNECTION
+   MONGODB
 ================================ */
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => {
-    console.error('❌ MongoDB connection error:', err);
-    process.exit(1);
-  });
+.then(() => console.log('✅ MongoDB connected'))
+.catch(err => {
+  console.error('❌ MongoDB connection error:', err);
+  process.exit(1);
+});
 
 /* ================================
    WORKER POOL
@@ -64,7 +64,7 @@ mongoose.connect(process.env.MONGO_URI)
 const workerPool = new WorkerPool(parseInt(process.env.WORKER_POOL_SIZE) || 4);
 
 /* ================================
-   WEBSOCKET CONNECTION HANDLER
+   WEBSOCKET CONNECTION
 ================================ */
 wss.on('connection', (ws) => {
   const clientId = uuidv4();
@@ -97,15 +97,23 @@ function broadcastProgress(jobId, progress) {
 }
 
 /* ================================
-   HEALTH CHECK
+   FIELD TYPES
 ================================ */
-app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    status: 'OK',
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    uptime: process.uptime()
-  });
+app.get('/api/field-types', (req, res) => {
+  const fieldTypes = [
+    { value: 'id', label: 'ID', description: 'Unique identifier' },
+    { value: 'username', label: 'Username' },
+    { value: 'email', label: 'Email' },
+    { value: 'phone', label: 'Phone' },
+    { value: 'status', label: 'Status' },
+    { value: 'score', label: 'Score' },
+    { value: 'created_date', label: 'Created Date' },
+    { value: 'department', label: 'Department' },
+    { value: 'first_name', label: 'First Name' },
+    { value: 'last_name', label: 'Last Name' }
+  ];
+
+  res.json({ success: true, fieldTypes });
 });
 
 /* ================================
@@ -115,23 +123,51 @@ app.post('/api/generate-csv', async (req, res) => {
   const { fields, rowCount = 1000 } = req.body;
   const jobId = uuidv4();
 
-  if (!fields || !Array.isArray(fields) || fields.length === 0) {
-    return res.status(400).json({ success: false, error: 'Fields required' });
+  try {
+    if (!fields || !Array.isArray(fields) || fields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'At least one field required'
+      });
+    }
+
+    const rows = parseInt(rowCount);
+    if (isNaN(rows) || rows < 1) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid row count'
+      });
+    }
+
+    const generationRecord = new CsvGeneration({
+      jobId,
+      filename: `generated_${Date.now()}.csv`,
+      fields,
+      rowCount: rows,
+      status: 'processing',
+      createdAt: new Date()
+    });
+
+    await generationRecord.save();
+
+    res.json({
+      success: true,
+      jobId,
+      message: 'CSV generation started'
+    });
+
+    processCSVGeneration(jobId, fields, rows, generationRecord);
+
+  } catch (error) {
+    console.error('Generation error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
-
-  res.json({
-    success: true,
-    jobId,
-    message: 'CSV generation started'
-  });
-
-  processCSVGeneration(jobId, fields, rowCount);
 });
 
 /* ================================
-   CSV PROCESSING
+   PROCESS CSV
 ================================ */
-async function processCSVGeneration(jobId, fields, rowCount) {
+async function processCSVGeneration(jobId, fields, rowCount, record) {
   try {
     broadcastProgress(jobId, {
       status: 'starting',
@@ -145,6 +181,10 @@ async function processCSVGeneration(jobId, fields, rowCount) {
     const failed = results.filter(r => r.status === 'rejected');
     if (failed.length > 0) throw new Error('Worker task failed');
 
+    record.status = 'completed';
+    record.completedAt = new Date();
+    await record.save();
+
     broadcastProgress(jobId, {
       status: 'completed',
       progress: 100,
@@ -152,6 +192,9 @@ async function processCSVGeneration(jobId, fields, rowCount) {
     });
 
   } catch (error) {
+    record.status = 'failed';
+    await record.save();
+
     broadcastProgress(jobId, {
       status: 'failed',
       progress: 0,
@@ -159,6 +202,52 @@ async function processCSVGeneration(jobId, fields, rowCount) {
     });
   }
 }
+
+/* ================================
+   DOWNLOAD
+================================ */
+app.get('/api/download/:jobId', async (req, res) => {
+  const generation = await CsvGeneration.findOne({ jobId: req.params.jobId });
+
+  if (!generation) {
+    return res.status(404).json({ success: false, error: 'Not found' });
+  }
+
+  const filePath = path.join(__dirname, 'generated', `${req.params.jobId}.csv`);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ success: false, error: 'File missing' });
+  }
+
+  res.download(filePath, generation.filename);
+});
+
+/* ================================
+   HISTORY
+================================ */
+app.get('/api/history', async (req, res) => {
+  const history = await CsvGeneration.find().sort({ createdAt: -1 }).limit(20);
+  res.json({ success: true, data: history });
+});
+
+/* ================================
+   HEALTH
+================================ */
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    status: 'OK',
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
+/* ================================
+   CLEANUP
+================================ */
+process.on('SIGINT', () => {
+  workerPool.destroy();
+  process.exit(0);
+});
 
 /* ================================
    START SERVER
