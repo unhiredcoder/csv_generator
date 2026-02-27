@@ -277,6 +277,7 @@ app.get('/api/health', (req, res) => {
     status: 'OK',
     mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
+ console.log('🏥 Health check pinged at:', new Date().toISOString());
 });
 
 /* ================================
@@ -297,4 +298,5 @@ server.listen(PORT, '0.0.0.0', () => {
   🧵 Worker Pool Size: ${workerPool.poolSize}
   `);
 });
+
 
