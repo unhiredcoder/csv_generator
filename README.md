@@ -7,7 +7,7 @@ Designed to generate large CSV files efficiently with real-time progress trackin
 
 ## 🚀 Live Demo
 
-Backend: [https://csv-generator-eta.vercel.app  ](https://csv-generator-eta.vercel.app/)
+Live: [https://csv-generator-eta.vercel.app  ](https://csv-generator-eta.vercel.app/)
 
 ---
 
